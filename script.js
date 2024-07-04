@@ -200,4 +200,29 @@ async function main() {
         if (Math.random() < CIRCLE_DENSITY) {
             let moire_img = {};
             for (let i = 0; i < MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS; i++) {
-                let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1)) + MIN_CIRCLE_RADIUS
+                let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1)) + MIN_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS);
+                Object.assign(moire_img, circle_img);
+            }
+            let [norm_img, maxx, maxy] = normalize_img(moire_img);
+            let moved_img = move_img(norm_img, Math.floor(Math.random() * (WIDTH - (MAX_CIRCLE_RADIUS * 2) - 1)), 0);
+
+            for (let key in moved_img) {
+                let [x, y] = key.split(',').map(Number);
+                next_columns[y][x] = MOIRE_CHAR;
+            }
+        }
+
+        let sine_pos = Math.floor(((Math.sin(sine_step) + 1) / 2) * (WIDTH - SINE_WIDTH));
+        for (let i = 0; i < SINE_WIDTH; i++) {
+            next_columns[0][sine_pos + i] = SINE_CHAR;
+        }
+        sine_step += sine_inc;
+
+        tat.print(next_columns[0].join(''));
+        await tat.sleep(DELAY);
+        next_columns.shift();
+    }
+}
+
+main();
+
