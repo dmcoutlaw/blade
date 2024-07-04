@@ -3,4 +3,4 @@ deployment:
     - export DEPLOYPATH=/home1/nvzpswmy/public_html/
     - /bin/cp index.html $DEPLOYPATH
     - /bin/cp styles.css $DEPLOYPATH
-    - /bin/cp script.js $DEPLOYPATH
+
