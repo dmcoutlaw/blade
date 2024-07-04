@@ -4,5 +4,4 @@ deployment:
     - _files:
         from: ./
         to: $DEPLOYPATH
-        filters:
-          - "*"
+      
