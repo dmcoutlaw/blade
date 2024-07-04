@@ -3,308 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spectral Blade </title>
+    <title>Digital Outlaws </title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Spectral Blade </h1>
-        
-        <audio id="backgroundMusic" autoplay loop></audio>
-        <p>Decoding your data dreams one line at a time. AI, ML, and IT professionals in YOUR area. Will work for BTC</p>
+        <h1>Spectral Blade</h1>
+
+    <audio id="backgroundMusic" autoplay loop></audio>
+        <p>Decoding your data dreams one line at a time.  AI, Ml and IT professionals in YOUR area. Will work for BTC</p>
         <a href="#" class="button">Explore More</a>
     </div>
     <div class="ascii-art-container">
         <textarea id="outputTextarea" readonly class="tatjsOutput"></textarea><br />
+      
     </div>
-
     <script>
 
-document.addEventListener("DOMContentLoaded", function () {
-    const musicFolder = "./"; // Assuming music files are in the same directory as index.html
-    const backgroundMusic = document.getElementById("backgroundMusic");
 
-    // Function to fetch all MP3 files from the current directory
-    async function fetchMusicFiles() {
-        try {
-            const response = await fetch(musicFolder);
-            if (!response.ok) {
-                throw new Error("Failed to fetch music files.");
+        
+
+    "use strict";
+    function _countNewlines(str) {
+        let count = 0;
+        for (let i = 0; i < str.length; i += 1) {
+            if (str[i] === '\n') {
+                count += 1;
             }
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const links = Array.from(doc.querySelectorAll('a[href$=".mp3"]')).map(link => link.getAttribute('href'));
-            return links;
-        } catch (error) {
-            console.error("Error fetching music files:", error);
-            return [];
+        }
+        return count;
+    }
+
+    function _truncateForRowBuffer(outputElem, rowBufferSize) {
+        if (rowBufferSize === null) {
+            return;
+        }
+        let totalNewlines = _countNewlines(outputElem.value);
+        if (totalNewlines >= rowBufferSize) {
+            let newlineCount = 0;
+            let cutAt = 0;
+            for (cutAt = 0; cutAt < outputElem.value.length; cutAt += 1) {
+                if (outputElem.value[cutAt] === '\n') {
+                    if (newlineCount == totalNewlines - rowBufferSize) {
+                        break;
+                    } else {
+                        newlineCount += 1;
+                    }
+                }
+            }
+            outputElem.value = outputElem.value.substring(cutAt + 1);
         }
     }
 
-    // Choose a random music file from the fetched list
-    async function loadAndPlayMusic() {
-        try {
-            const musicFiles = await fetchMusicFiles();
-            if (musicFiles.length === 0) {
-                console.warn("No music files found.");
-                return;
+    function _processBackspaces(input) {
+        let stack = [];
+        for (let char of input) {
+            if (char === '\b') {
+                if (stack.length > 0) {
+                    stack.pop();
+                }
+            } else {
+                stack.push(char);
             }
-            const randomMusicFile = musicFiles[Math.floor(Math.random() * musicFiles.length)];
-            backgroundMusic.src = musicFolder + randomMusicFile;
-            backgroundMusic.play();
-            console.log("Selected music file:", randomMusicFile);
-        } catch (error) {
-            console.error("Error loading and playing music:", error);
         }
+        return stack.join('');
     }
 
-    // Call the function to load and play music
-    loadAndPlayMusic();
-});
+    function sleep(delayInMilliseconds) {
+        return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
+    }
 
-   
-
-
-        "use strict";
-
-        function _countNewlines(str) {
-            let count = 0;
-            for (let i = 0; i < str.length; i += 1) {
-                if (str[i] === '\n') {
-                    count += 1;
-                }
+    class Tatjs {
+        constructor(outputElem = null, inputElem = null, rowBufferSize = 256) {
+            this.rowBufferSize = rowBufferSize;
+            this.outputElem = outputElem;
+            this.inputElem = inputElem;
+            if (this.outputElem !== null) {
+                this.outputElem.readOnly = true;
             }
-            return count;
+            if (this.inputElem !== null) {
+                this.inputElem.readOnly = true;
+            }
+            this.clear();
         }
 
-        function _truncateForRowBuffer(outputElem, rowBufferSize) {
-            if (rowBufferSize === null) {
-                return;
+        print() {
+            if (this.outputElem === null) {
+                throw "print() has been called but this.outputElem does not exist.";
             }
-            let totalNewlines = _countNewlines(outputElem.value);
-            if (totalNewlines >= rowBufferSize) {
-                let newlineCount = 0;
-                let cutAt = 0;
-                for (cutAt = 0; cutAt < outputElem.value.length; cutAt += 1) {
-                    if (outputElem.value[cutAt] === '\n') {
-                        if (newlineCount == totalNewlines - rowBufferSize) {
-                            break;
-                        } else {
-                            newlineCount += 1;
-                        }
+            let args = Array.prototype.slice.call(arguments);
+            let newline = "\n";
+            if (args.length !== 1 && args[args.length - 1] == "") {
+                newline = "";
+            }
+            this.outputElem.value = _processBackspaces(this.outputElem.value + args.join("")) + newline;
+            _truncateForRowBuffer(this.outputElem, this.rowBufferSize);
+            this.outputElem.scrollTop = this.outputElem.scrollHeight;
+        }
+
+        input() {
+            if (this.inputElem === null) {
+                throw "input() has been called but this.inputElem does not exist.";
+            }
+            this.inputElem.readOnly = false;
+            this.inputElem.focus();
+            let that = this;
+            return new Promise((resolve) => {
+                function handleKeypress(e) {
+                    if (e.key === "Enter") {
+                        that.print(e.target.value);
+                        resolve(e.target.value);
+                        e.target.value = "";
+                        that.inputElem.removeEventListener('keypress', handleKeypress);
+                        that.inputElem.readOnly = true;
                     }
                 }
-                outputElem.value = outputElem.value.substring(cutAt + 1);
-            }
+                this.inputElem.addEventListener('keypress', handleKeypress);
+            });
         }
 
-        function _processBackspaces(input) {
-            let stack = [];
-            for (let char of input) {
-                if (char === '\b') {
-                    if (stack.length > 0) {
-                        stack.pop();
-                    }
-                } else {
-                    stack.push(char);
-                }
-            }
-            return stack.join('');
-        }
-
-        function sleep(delayInMilliseconds) {
+        sleep(delayInMilliseconds) {
             return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
         }
 
-        class Tatjs {
-            constructor(outputElem = null, inputElem = null, rowBufferSize = 256) {
-                this.rowBufferSize = rowBufferSize;
-                this.outputElem = outputElem;
-                this.inputElem = inputElem;
-                if (this.outputElem !== null) {
-                    this.outputElem.readOnly = true;
-                }
-                if (this.inputElem !== null) {
-                    this.inputElem.readOnly = true;
-                }
-                this.clear();
+        clear() {
+            if (this.outputElem === null) {
+                throw "clear() has been called but this.outputElem does not exist.";
             }
+            this.outputElem.value = "";
+        }
+    }
 
-            print() {
-                if (this.outputElem === null) {
-                    throw "print() has been called but this.outputElem does not exist.";
-                }
-                let args = Array.prototype.slice.call(arguments);
-                let newline = "\n";
-                if (args.length !== 1 && args[args.length - 1] == "") {
-                    newline = "";
-                }
-                this.outputElem.value = _processBackspaces(this.outputElem.value + args.join("")) + newline;
-                _truncateForRowBuffer(this.outputElem, this.rowBufferSize);
-                this.outputElem.scrollTop = this.outputElem.scrollHeight;
-            }
+    let running = true;
+    const tat = new Tatjs(document.getElementById('outputTextarea'));
 
-            input() {
-                if (this.inputElem === null) {
-                    throw "input() has been called but this.inputElem does not exist.";
-                }
-                this.inputElem.readOnly = false;
-                this.inputElem.focus();
-                let that = this;
-                return new Promise((resolve) => {
-                    function handleKeypress(e) {
-                        if (e.key === "Enter") {
-                            that.print(e.target.value);
-                            resolve(e.target.value);
-                            e.target.value = "";
-                            that.inputElem.removeEventListener('keypress', handleKeypress);
-                            that.inputElem.readOnly = true;
-                        }
-                    }
-                    this.inputElem.addEventListener('keypress', handleKeypress);
-                });
-            }
+    const WIDTH = 200;
+    const DELAY = 40;
+    const MOIRE_CHAR = ":";
+    const EMPTY_CHAR = ' ';
+    const MIN_CIRCLE_RADIUS = 2;
+    const MAX_CIRCLE_RADIUS = 8;
+    const CIRCLE_DENSITY = 0.3;
 
-            sleep(delayInMilliseconds) {
-                return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
-            }
+    const SINE_CHAR = '_';
+    const SINE_WIDTH = 25;
+    let sine_step = 0.0;
+    const sine_inc = 0.1;
 
-            clear() {
-                if (this.outputElem === null) {
-                    throw "clear() has been called but this.outputElem does not exist.";
-                }
-                this.outputElem.value = "";
-            }
+    function normalize_img(img) {
+        let normalized = {};
+        let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+
+        if (Object.keys(img).length === 0) {
+            return {};
         }
 
-        let running = true;
-        const tat = new Tatjs(document.getElementById('outputTextarea'));
-
-        const WIDTH = 200;
-        const DELAY = 40;
-        const MOIRE_CHAR = ":";
-        const EMPTY_CHAR = ' ';
-        const MIN_CIRCLE_RADIUS = 2;
-        const MAX_CIRCLE_RADIUS = 8;
-        const CIRCLE_DENSITY = 0.3;
-
-        const SINE_CHAR = '_';
-        const SINE_WIDTH = 25;
-        let sine_step = 0.0;
-        const sine_inc = 0.1;
-
-        function normalize_img(img) {
-            let normalized = {};
-            let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
-
-            if (Object.keys(img).length === 0) {
-                return {};
-            }
-
-            for (let key in img) {
-                let [x, y] = key.split(',').map(Number);
-                if (x < minx) minx = x;
-                if (x > maxx) maxx = x;
-                if (y < miny) miny = y;
-                if (y > maxy) maxy = y;
-            }
-
-            for (let key in img) {
-                let [x, y] = key.split(',').map(Number);
-                normalized[`${x - minx},${y - miny}`] = img[key];
-            }
-
-            return [normalized, maxx - minx + 1, maxy - miny + 1];
+        for (let key in img) {
+            let [x, y] = key.split(',').map(Number);
+            if (x < minx) minx = x;
+            if (x > maxx) maxx = x;
+            if (y < miny) miny = y;
+            if (y > maxy) maxy = y;
         }
 
-        function move_img(img, movex, movey) {
-            let moved_img = {};
-            for (let key in img) {
-                let [x, y] = key.split(',').map(Number);
-                moved_img[`${x + movex},${y + movey}`] = img[key];
-            }
-            return moved_img;
+        for (let key in img) {
+            let [x, y] = key.split(',').map(Number);
+            normalized[`${x - minx},${y - miny}`] = img[key];
         }
 
-        function get_moire(radius, centerx, centery) {
-            let switch_val = 3 - (2 * radius);
-            let cx = 0;
-            let cy = radius;
-            let img = {};
+        return [normalized, maxx - minx + 1, maxy - miny + 1];
+    }
 
-            while (cx <= cy) {
-                img[`${cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
-                img[`${cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
-                img[`${cy + centerx},${cx + centery}`] = MOIRE_CHAR;
-                img[`${cx + centerx},${cy + centery}`] = MOIRE_CHAR;
-                img[`${-cx + centerx},${cy + centery}`] = MOIRE_CHAR;
-                img[`${-cy + centerx},${cx + centery}`] = MOIRE_CHAR;
-                img[`${-cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
-                img[`${-cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
-                if (switch_val < 0) {
-                    switch_val = switch_val + (4 * cx) + 6;
-                } else {
-                    switch_val = switch_val + (4 * (cx - cy)) + 10;
-                    cy = cy - 1;
-                }
-                cx = cx + 1;
+    function move_img(img, movex, movey) {
+        let moved_img = {};
+        for (let key in img) {
+            let [x, y] = key.split(',').map(Number);
+            moved_img[`${x + movex},${y + movey}`] = img[key];
+        }
+        return moved_img;
+    }
+
+    function get_moire(radius, centerx, centery) {
+        let switch_val = 3 - (2 * radius);
+        let cx = 0;
+        let cy = radius;
+        let img = {};
+
+        while (cx <= cy) {
+            img[`${cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
+            img[`${cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
+            img[`${cy + centerx},${cx + centery}`] = MOIRE_CHAR;
+            img[`${cx + centerx},${cy + centery}`] = MOIRE_CHAR;
+            img[`${-cx + centerx},${cy + centery}`] = MOIRE_CHAR;
+            img[`${-cy + centerx},${cx + centery}`] = MOIRE_CHAR;
+            img[`${-cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
+            img[`${-cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
+            if (switch_val < 0) {
+                switch_val = switch_val + (4 * cx) + 6;
+            } else {
+                switch_val = switch_val + (4 * (cx - cy)) + 10;
+                cy = cy - 1;
             }
-
-            return img;
+            cx = cx + 1;
         }
 
-        let next_columns = [];
+        return img;
+    }
 
-        async function main() {
-            while (running) {
-                while (next_columns.length < MAX_CIRCLE_RADIUS * 2 + 1) {
-                    next_columns.push(Array(WIDTH).fill(EMPTY_CHAR));
-                }
+    let next_columns = [];
 
-                if (Math.random() < CIRCLE_DENSITY) {
-                    let moire_img = {};
-                    for (let i = 0; i < MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS; i++) {
-                        let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1) + MIN_CIRCLE_RADIUS), 0, 0);
-                        moire_img = { ...moire_img, ...circle_img };
-                    }
-
-                    let [img, img_w, img_h] = normalize_img(moire_img);
-                    let x = Math.floor(Math.random() * (WIDTH - img_w));
-                    let y = Math.floor(Math.random() * (next_columns.length - img_h));
-                    img = move_img(img, x, y);
-
-                    for (let key in img) {
-                        let [img_x, img_y] = key.split(',').map(Number);
-                        next_columns[img_y][img_x] = img[key];
-                    }
-                }
-
-                let sine_wave = Math.sin(sine_step);
-                sine_step += sine_inc;
-
-                for (let i = 0; i < next_columns.length; i++) {
-                    next_columns[i][Math.floor(WIDTH / 2 + sine_wave * SINE_WIDTH)] = SINE_CHAR;
-                }
-
-                let output = "";
-                for (let row of next_columns) {
-                    output += row.join("") + "\n";
-                }
-
-                tat.print(output);
-
-                next_columns.shift();
+    async function main() {
+        while (running) {
+            while (next_columns.length < MAX_CIRCLE_RADIUS * 2 + 1) {
                 next_columns.push(Array(WIDTH).fill(EMPTY_CHAR));
-
-                await tat.sleep(DELAY);
             }
-        }
 
-        main();
+            if (Math.random() < CIRCLE_DENSITY) {
+                let moire_img = {};
+                for (let i = 0; i < MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS; i++) {
+                    let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1)) + MIN_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS);
+                    Object.assign(moire_img, circle_img);
+                }
+                let [norm_img, maxx, maxy] = normalize_img(moire_img);
+                let moved_img = move_img(norm_img, Math.floor(Math.random() * (WIDTH - (MAX_CIRCLE_RADIUS * 2) - 1)), 0);
+
+                for (let key in moved_img) {
+                    let [x, y] = key.split(',').map(Number);
+                    next_columns[y][x] = MOIRE_CHAR;
+                }
+            }
+
+            let sine_pos = Math.floor(((Math.sin(sine_step) + 1) / 2) * (WIDTH - SINE_WIDTH));
+            for (let i = 0; i < SINE_WIDTH; i++) {
+                next_columns[0][sine_pos + i] = SINE_CHAR;
+            }
+            sine_step += sine_inc;
+
+            tat.print(next_columns[0].join(''));
+            await tat.sleep(DELAY);
+            next_columns.shift();
+        }
+    }
+
+    main();
     </script>
 </body>
 </html>
+
+
 
 
 
