@@ -1,7 +1,5 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home1/nvzpswmy/public_html/
-    - _files:
-        from: ./
-        to: $DEPLOYPATH
-      
+    - /bin/cp index.html $DEPLOYPATH
+    - /bin/cp styles.css $DEPLOYPATH
