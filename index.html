@@ -22,33 +22,48 @@
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    const currentDirectory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
-    const musicFiles = [];
+    const musicFolder = "/home1/nvzpswmy/repositories/blade2/music/";
+    const backgroundMusic = document.getElementById("backgroundMusic");
 
-    // Fetching all files in current directory
-    fetch(currentDirectory)
-        .then(response => response.text())
-        .then(html => {
+    // Function to fetch all MP3 files from the music folder
+    async function fetchMusicFiles() {
+        try {
+            const response = await fetch(musicFolder);
+            if (!response.ok) {
+                throw new Error("Failed to fetch music files.");
+            }
+            const html = await response.text();
             const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const links = doc.querySelectorAll('a');
-            
-            links.forEach(link => {
-                const fileName = link.getAttribute('href');
-                if (fileName.endsWith('.mp3')) {
-                    musicFiles.push(fileName);
-                }
-            });
+            const doc = parser.parseFromString(html, "text/html");
+            const links = Array.from(doc.querySelectorAll('a[href$=".mp3"]')).map(link => link.getAttribute('href'));
+            return links;
+        } catch (error) {
+            console.error("Error fetching music files:", error);
+            return [];
+        }
+    }
 
-            // Choose a random music file
-            const backgroundMusic = document.getElementById("backgroundMusic");
+    // Choose a random music file from the fetched list
+    async function loadAndPlayMusic() {
+        try {
+            const musicFiles = await fetchMusicFiles();
+            if (musicFiles.length === 0) {
+                console.warn("No music files found.");
+                return;
+            }
             const randomMusicFile = musicFiles[Math.floor(Math.random() * musicFiles.length)];
-            backgroundMusic.src = randomMusicFile;
-
+            backgroundMusic.src = musicFolder + randomMusicFile;
+            backgroundMusic.play();
             console.log("Selected music file:", randomMusicFile);
-        })
-        .catch(error => console.error('Error fetching directory listing:', error));
+        } catch (error) {
+            console.error("Error loading and playing music:", error);
+        }
+    }
+
+    // Call the function to load and play music
+    loadAndPlayMusic();
 });
+
 
         "use strict";
 
