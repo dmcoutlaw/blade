@@ -3,244 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Outlaws </title>
+    <title>Digital Outlaws</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <h1>Spectral Blade</h1>
-        <p>Decoding your data dreams one line at a time.  AI, Ml and IT professionals in YOUR area. Will work for BTC</p>
+        
+        <audio id="backgroundMusic" autoplay loop></audio>
+        <p>Decoding your data dreams one line at a time. AI, ML, and IT professionals in YOUR area. Will work for BTC</p>
         <a href="#" class="button">Explore More</a>
     </div>
     <div class="ascii-art-container">
         <textarea id="outputTextarea" readonly class="tatjsOutput"></textarea><br />
-      
     </div>
+
     <script>
-    "use strict";
-    function _countNewlines(str) {
-        let count = 0;
-        for (let i = 0; i < str.length; i += 1) {
-            if (str[i] === '\n') {
-                count += 1;
-            }
-        }
-        return count;
-    }
+     document.addEventListener("DOMContentLoaded", function () {
+    // Music selection logic
+    const musicFolder = "music/";
+    const musicFiles = [
+        'AlkTrio-Crawl-[8-2-2019].mp3',
+        'FF6Mog-tune-II-[2-15-2019].mp3',
+        'Tom_-Inuyasha-op-2-nes_-.mp3',
+        'Saga_Frontier_2_-_Vorspiel_[6-7-2019].mp3',
+        'Mninja-RyukyuSecret[9232017]nes.mp3',
+        '(Final_Fantasy_Tactics)_-_Memories_-_Chiptune.mp3',
+        'Tom__-_Fear_Fate_[12-13-2019].mp3'
+    ]; 
+    
+    const backgroundMusic = document.getElementById("backgroundMusic");
 
-    function _truncateForRowBuffer(outputElem, rowBufferSize) {
-        if (rowBufferSize === null) {
-            return;
+    // Choose a random music file
+    const randomMusicFile = musicFiles[Math.floor(Math.random() * musicFiles.length)];
+    backgroundMusic.src = musicFolder + randomMusicFile;
+
+    // Print chosen music file to console for debugging
+    console.log("Chosen music file:", randomMusicFile);
+});
+        "use strict";
+
+        function _countNewlines(str) {
+            let count = 0;
+            for (let i = 0; i < str.length; i += 1) {
+                if (str[i] === '\n') {
+                    count += 1;
+                }
+            }
+            return count;
         }
-        let totalNewlines = _countNewlines(outputElem.value);
-        if (totalNewlines >= rowBufferSize) {
-            let newlineCount = 0;
-            let cutAt = 0;
-            for (cutAt = 0; cutAt < outputElem.value.length; cutAt += 1) {
-                if (outputElem.value[cutAt] === '\n') {
-                    if (newlineCount == totalNewlines - rowBufferSize) {
-                        break;
-                    } else {
-                        newlineCount += 1;
+
+        function _truncateForRowBuffer(outputElem, rowBufferSize) {
+            if (rowBufferSize === null) {
+                return;
+            }
+            let totalNewlines = _countNewlines(outputElem.value);
+            if (totalNewlines >= rowBufferSize) {
+                let newlineCount = 0;
+                let cutAt = 0;
+                for (cutAt = 0; cutAt < outputElem.value.length; cutAt += 1) {
+                    if (outputElem.value[cutAt] === '\n') {
+                        if (newlineCount == totalNewlines - rowBufferSize) {
+                            break;
+                        } else {
+                            newlineCount += 1;
+                        }
                     }
                 }
-            }
-            outputElem.value = outputElem.value.substring(cutAt + 1);
-        }
-    }
-
-    function _processBackspaces(input) {
-        let stack = [];
-        for (let char of input) {
-            if (char === '\b') {
-                if (stack.length > 0) {
-                    stack.pop();
-                }
-            } else {
-                stack.push(char);
+                outputElem.value = outputElem.value.substring(cutAt + 1);
             }
         }
-        return stack.join('');
-    }
 
-    function sleep(delayInMilliseconds) {
-        return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
-    }
-
-    class Tatjs {
-        constructor(outputElem = null, inputElem = null, rowBufferSize = 256) {
-            this.rowBufferSize = rowBufferSize;
-            this.outputElem = outputElem;
-            this.inputElem = inputElem;
-            if (this.outputElem !== null) {
-                this.outputElem.readOnly = true;
-            }
-            if (this.inputElem !== null) {
-                this.inputElem.readOnly = true;
-            }
-            this.clear();
-        }
-
-        print() {
-            if (this.outputElem === null) {
-                throw "print() has been called but this.outputElem does not exist.";
-            }
-            let args = Array.prototype.slice.call(arguments);
-            let newline = "\n";
-            if (args.length !== 1 && args[args.length - 1] == "") {
-                newline = "";
-            }
-            this.outputElem.value = _processBackspaces(this.outputElem.value + args.join("")) + newline;
-            _truncateForRowBuffer(this.outputElem, this.rowBufferSize);
-            this.outputElem.scrollTop = this.outputElem.scrollHeight;
-        }
-
-        input() {
-            if (this.inputElem === null) {
-                throw "input() has been called but this.inputElem does not exist.";
-            }
-            this.inputElem.readOnly = false;
-            this.inputElem.focus();
-            let that = this;
-            return new Promise((resolve) => {
-                function handleKeypress(e) {
-                    if (e.key === "Enter") {
-                        that.print(e.target.value);
-                        resolve(e.target.value);
-                        e.target.value = "";
-                        that.inputElem.removeEventListener('keypress', handleKeypress);
-                        that.inputElem.readOnly = true;
+        function _processBackspaces(input) {
+            let stack = [];
+            for (let char of input) {
+                if (char === '\b') {
+                    if (stack.length > 0) {
+                        stack.pop();
                     }
+                } else {
+                    stack.push(char);
                 }
-                this.inputElem.addEventListener('keypress', handleKeypress);
-            });
+            }
+            return stack.join('');
         }
 
-        sleep(delayInMilliseconds) {
+        function sleep(delayInMilliseconds) {
             return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
         }
 
-        clear() {
-            if (this.outputElem === null) {
-                throw "clear() has been called but this.outputElem does not exist.";
+        class Tatjs {
+            constructor(outputElem = null, inputElem = null, rowBufferSize = 256) {
+                this.rowBufferSize = rowBufferSize;
+                this.outputElem = outputElem;
+                this.inputElem = inputElem;
+                if (this.outputElem !== null) {
+                    this.outputElem.readOnly = true;
+                }
+                if (this.inputElem !== null) {
+                    this.inputElem.readOnly = true;
+                }
+                this.clear();
             }
-            this.outputElem.value = "";
-        }
-    }
 
-    let running = true;
-    const tat = new Tatjs(document.getElementById('outputTextarea'));
-
-    const WIDTH = 200;
-    const DELAY = 40;
-    const MOIRE_CHAR = ":";
-    const EMPTY_CHAR = ' ';
-    const MIN_CIRCLE_RADIUS = 2;
-    const MAX_CIRCLE_RADIUS = 8;
-    const CIRCLE_DENSITY = 0.3;
-
-    const SINE_CHAR = '_';
-    const SINE_WIDTH = 25;
-    let sine_step = 0.0;
-    const sine_inc = 0.1;
-
-    function normalize_img(img) {
-        let normalized = {};
-        let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
-
-        if (Object.keys(img).length === 0) {
-            return {};
-        }
-
-        for (let key in img) {
-            let [x, y] = key.split(',').map(Number);
-            if (x < minx) minx = x;
-            if (x > maxx) maxx = x;
-            if (y < miny) miny = y;
-            if (y > maxy) maxy = y;
-        }
-
-        for (let key in img) {
-            let [x, y] = key.split(',').map(Number);
-            normalized[`${x - minx},${y - miny}`] = img[key];
-        }
-
-        return [normalized, maxx - minx + 1, maxy - miny + 1];
-    }
-
-    function move_img(img, movex, movey) {
-        let moved_img = {};
-        for (let key in img) {
-            let [x, y] = key.split(',').map(Number);
-            moved_img[`${x + movex},${y + movey}`] = img[key];
-        }
-        return moved_img;
-    }
-
-    function get_moire(radius, centerx, centery) {
-        let switch_val = 3 - (2 * radius);
-        let cx = 0;
-        let cy = radius;
-        let img = {};
-
-        while (cx <= cy) {
-            img[`${cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
-            img[`${cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
-            img[`${cy + centerx},${cx + centery}`] = MOIRE_CHAR;
-            img[`${cx + centerx},${cy + centery}`] = MOIRE_CHAR;
-            img[`${-cx + centerx},${cy + centery}`] = MOIRE_CHAR;
-            img[`${-cy + centerx},${cx + centery}`] = MOIRE_CHAR;
-            img[`${-cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
-            img[`${-cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
-            if (switch_val < 0) {
-                switch_val = switch_val + (4 * cx) + 6;
-            } else {
-                switch_val = switch_val + (4 * (cx - cy)) + 10;
-                cy = cy - 1;
+            print() {
+                if (this.outputElem === null) {
+                    throw "print() has been called but this.outputElem does not exist.";
+                }
+                let args = Array.prototype.slice.call(arguments);
+                let newline = "\n";
+                if (args.length !== 1 && args[args.length - 1] == "") {
+                    newline = "";
+                }
+                this.outputElem.value = _processBackspaces(this.outputElem.value + args.join("")) + newline;
+                _truncateForRowBuffer(this.outputElem, this.rowBufferSize);
+                this.outputElem.scrollTop = this.outputElem.scrollHeight;
             }
-            cx = cx + 1;
+
+            input() {
+                if (this.inputElem === null) {
+                    throw "input() has been called but this.inputElem does not exist.";
+                }
+                this.inputElem.readOnly = false;
+                this.inputElem.focus();
+                let that = this;
+                return new Promise((resolve) => {
+                    function handleKeypress(e) {
+                        if (e.key === "Enter") {
+                            that.print(e.target.value);
+                            resolve(e.target.value);
+                            e.target.value = "";
+                            that.inputElem.removeEventListener('keypress', handleKeypress);
+                            that.inputElem.readOnly = true;
+                        }
+                    }
+                    this.inputElem.addEventListener('keypress', handleKeypress);
+                });
+            }
+
+            sleep(delayInMilliseconds) {
+                return new Promise(resolve => setTimeout(resolve, delayInMilliseconds));
+            }
+
+            clear() {
+                if (this.outputElem === null) {
+                    throw "clear() has been called but this.outputElem does not exist.";
+                }
+                this.outputElem.value = "";
+            }
         }
 
-        return img;
-    }
+        let running = true;
+        const tat = new Tatjs(document.getElementById('outputTextarea'));
 
-    let next_columns = [];
+        const WIDTH = 200;
+        const DELAY = 40;
+        const MOIRE_CHAR = ":";
+        const EMPTY_CHAR = ' ';
+        const MIN_CIRCLE_RADIUS = 2;
+        const MAX_CIRCLE_RADIUS = 8;
+        const CIRCLE_DENSITY = 0.3;
 
-    async function main() {
-        while (running) {
-            while (next_columns.length < MAX_CIRCLE_RADIUS * 2 + 1) {
+        const SINE_CHAR = '_';
+        const SINE_WIDTH = 25;
+        let sine_step = 0.0;
+        const sine_inc = 0.1;
+
+        function normalize_img(img) {
+            let normalized = {};
+            let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+
+            if (Object.keys(img).length === 0) {
+                return {};
+            }
+
+            for (let key in img) {
+                let [x, y] = key.split(',').map(Number);
+                if (x < minx) minx = x;
+                if (x > maxx) maxx = x;
+                if (y < miny) miny = y;
+                if (y > maxy) maxy = y;
+            }
+
+            for (let key in img) {
+                let [x, y] = key.split(',').map(Number);
+                normalized[`${x - minx},${y - miny}`] = img[key];
+            }
+
+            return [normalized, maxx - minx + 1, maxy - miny + 1];
+        }
+
+        function move_img(img, movex, movey) {
+            let moved_img = {};
+            for (let key in img) {
+                let [x, y] = key.split(',').map(Number);
+                moved_img[`${x + movex},${y + movey}`] = img[key];
+            }
+            return moved_img;
+        }
+
+        function get_moire(radius, centerx, centery) {
+            let switch_val = 3 - (2 * radius);
+            let cx = 0;
+            let cy = radius;
+            let img = {};
+
+            while (cx <= cy) {
+                img[`${cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
+                img[`${cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
+                img[`${cy + centerx},${cx + centery}`] = MOIRE_CHAR;
+                img[`${cx + centerx},${cy + centery}`] = MOIRE_CHAR;
+                img[`${-cx + centerx},${cy + centery}`] = MOIRE_CHAR;
+                img[`${-cy + centerx},${cx + centery}`] = MOIRE_CHAR;
+                img[`${-cy + centerx},${-cx + centery}`] = MOIRE_CHAR;
+                img[`${-cx + centerx},${-cy + centery}`] = MOIRE_CHAR;
+                if (switch_val < 0) {
+                    switch_val = switch_val + (4 * cx) + 6;
+                } else {
+                    switch_val = switch_val + (4 * (cx - cy)) + 10;
+                    cy = cy - 1;
+                }
+                cx = cx + 1;
+            }
+
+            return img;
+        }
+
+        let next_columns = [];
+
+        async function main() {
+            while (running) {
+                while (next_columns.length < MAX_CIRCLE_RADIUS * 2 + 1) {
+                    next_columns.push(Array(WIDTH).fill(EMPTY_CHAR));
+                }
+
+                if (Math.random() < CIRCLE_DENSITY) {
+                    let moire_img = {};
+                    for (let i = 0; i < MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS; i++) {
+                        let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1) + MIN_CIRCLE_RADIUS), 0, 0);
+                        moire_img = { ...moire_img, ...circle_img };
+                    }
+
+                    let [img, img_w, img_h] = normalize_img(moire_img);
+                    let x = Math.floor(Math.random() * (WIDTH - img_w));
+                    let y = Math.floor(Math.random() * (next_columns.length - img_h));
+                    img = move_img(img, x, y);
+
+                    for (let key in img) {
+                        let [img_x, img_y] = key.split(',').map(Number);
+                        next_columns[img_y][img_x] = img[key];
+                    }
+                }
+
+                let sine_wave = Math.sin(sine_step);
+                sine_step += sine_inc;
+
+                for (let i = 0; i < next_columns.length; i++) {
+                    next_columns[i][Math.floor(WIDTH / 2 + sine_wave * SINE_WIDTH)] = SINE_CHAR;
+                }
+
+                let output = "";
+                for (let row of next_columns) {
+                    output += row.join("") + "\n";
+                }
+
+                tat.print(output);
+
+                next_columns.shift();
                 next_columns.push(Array(WIDTH).fill(EMPTY_CHAR));
+
+                await tat.sleep(DELAY);
             }
-
-            if (Math.random() < CIRCLE_DENSITY) {
-                let moire_img = {};
-                for (let i = 0; i < MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS; i++) {
-                    let circle_img = get_moire(Math.floor(Math.random() * (MAX_CIRCLE_RADIUS - MIN_CIRCLE_RADIUS + 1)) + MIN_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS);
-                    Object.assign(moire_img, circle_img);
-                }
-                let [norm_img, maxx, maxy] = normalize_img(moire_img);
-                let moved_img = move_img(norm_img, Math.floor(Math.random() * (WIDTH - (MAX_CIRCLE_RADIUS * 2) - 1)), 0);
-
-                for (let key in moved_img) {
-                    let [x, y] = key.split(',').map(Number);
-                    next_columns[y][x] = MOIRE_CHAR;
-                }
-            }
-
-            let sine_pos = Math.floor(((Math.sin(sine_step) + 1) / 2) * (WIDTH - SINE_WIDTH));
-            for (let i = 0; i < SINE_WIDTH; i++) {
-                next_columns[0][sine_pos + i] = SINE_CHAR;
-            }
-            sine_step += sine_inc;
-
-            tat.print(next_columns[0].join(''));
-            await tat.sleep(DELAY);
-            next_columns.shift();
         }
-    }
 
-    main();
+        main();
     </script>
 </body>
 </html>
+
+
 
