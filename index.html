@@ -20,12 +20,11 @@
 
     <script>
 
-
 document.addEventListener("DOMContentLoaded", function () {
-    const musicFolder = "/home1/nvzpswmy/repositories/blade2/music/";
+    const musicFolder = "./"; // Assuming music files are in the same directory as index.html
     const backgroundMusic = document.getElementById("backgroundMusic");
 
-    // Function to fetch all MP3 files from the music folder
+    // Function to fetch all MP3 files from the current directory
     async function fetchMusicFiles() {
         try {
             const response = await fetch(musicFolder);
@@ -63,6 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Call the function to load and play music
     loadAndPlayMusic();
 });
+
+   
 
 
         "use strict";
